@@ -39,14 +39,14 @@ class FortifyServiceProvider extends ServiceProvider
                 if ($request->is('admin/login')) {
                     if (Gate::allows('admin-higher', $user)) {
                         $request->session()->regenerate();
-                        return redirect('/admin/attendance/list');
+                        return redirect('http://admin.localhost/admin/attendance/list');
                     } else {
                         return redirect('/admin/login')->withErrors(["email" => "管理者のみがログインできます"]);
                     }
                 } elseif ($request->is('login')) {
                     if (Gate::allows('user-higher', $user)) {
                         $request->session()->regenerate();
-                        return redirect('/attendance');
+                        return redirect('http://staff.localhost/attendance');
                     } else {
                         return redirect('/login')->withErrors(["email" => "スタッフのみがログインできます"]);
                     }
@@ -61,9 +61,9 @@ class FortifyServiceProvider extends ServiceProvider
             public function toResponse($request)
             {
                 if($request->is('admin/logout')){
-                    return redirect('admin/login');
+                    return redirect('http://admin.localhost/admin/login');
                 }else{
-                    return redirect('/login');
+                    return redirect('http://staff.localhost/login');
                 }
             }
         });
@@ -90,12 +90,12 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
 
-        //会員登録した後のメール認証有無でリダイレクト先を変更
+        //メール認証済みor未済でリダイレクト先を変更
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('email', $request->email)->first();
 
             if ($user && Hash::check($request->password, $user->password)) {
-                if (!$user->hasVerifiedEmail()) {
+                if ($user->hasVerifiedEmail()) {
                     return $user;
                 }
             }

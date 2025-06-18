@@ -52,18 +52,21 @@ class AdminAttendanceListTest extends TestCase
             'attendance_id' => $this->attendance->id,
             'rest_id' => $rest->id,
         ]);
-
         Carbon::setTestNow(Carbon::create(2025, 5, 1, 12, 00, 0));
     }
 
     //管理者ユーザーが全一般ユーザーの「氏名」「メールアドレス」を確認できる
     public function testStaffList()
     {
-        $response = $this->post('admin/login', [
-            'email' => 'admin123@example.com',
+        $response = $this
+        ->post('http://admin.localhost/admin/login', [
+            'email' => 'admin@example.com',
             'password' => 'password123',
         ]);
-        $response = $this->actingAs($this->admin)->get('/admin/staff/list');
+        $response->assertRedirect();
+        $response = $this
+        ->actingAs($this->admin)
+        ->get('http://admin.localhost/admin/staff/list');
         $response->assertStatus(200);
         foreach ($this->userAll as $user){
             $response->assertSeeInOrder([$user->name, $user->email]);
@@ -72,11 +75,12 @@ class AdminAttendanceListTest extends TestCase
     //ユーザーの勤怠情報が正しく表示される
     public function testStaffAttendance()
     {
-        $response = $this->post('admin/login', [
-            'email' => 'admin123@example.com',
+        $response = $this->post('http://admin.localhost/admin/login', [
+            'email' => 'admin@example.com',
             'password' => 'password123',
-        ]);
-        $response = $this->actingAs($this->admin)->get('/admin/attendance/staff/'.$this->user->id);
+        ],);
+        $response = $this
+        ->get('http://admin.localhost/admin/attendance/staff/'.$this->user->id);
         $response->assertStatus(200);
         $response->assertSee('西　伶奈さんの勤怠');
         $response->assertSee('2025/05');
@@ -85,43 +89,43 @@ class AdminAttendanceListTest extends TestCase
     //「前月」を押下した時に表示月の前月の情報が表示される
     public function testPrevMonth()
     {
-        $response = $this->post('admin/login', [
-            'email' => 'admin123@example.com',
+        $response = $this->post('http://admin.localhost/admin/login', [
+            'email' => 'admin@example.com',
             'password' => 'password123',
         ]);
-        $response = $this->actingAs($this->admin)->get('/admin/attendance/staff/' . $this->user->id);
+        $response = $this->actingAs($this->admin)->get('http://admin.localhost/admin/attendance/staff/' . $this->user->id);
         $response->assertStatus(200);
         $date = Carbon::now()->format('Y/m');
         $response->assertSee($date);
         $prevMonth = Carbon::now()->subMonth()->format('Y/m');
-        $response = $this->actingAs($this->admin)->get('/admin/attendance/staff/' . $this->user->id.'/'.$prevMonth);
+        $response = $this->actingAs($this->admin)->get('http://admin.localhost/admin/attendance/staff/' . $this->user->id.'/'.$prevMonth);
         $response->assertSee($prevMonth);
     }
     //「翌月」を押下した時に表示月の前月の情報が表示される
     public function testNextMonth()
     {
-        $response = $this->post('admin/login', [
-            'email' => 'admin123@example.com',
+        $response = $this->post('http://admin.loclhost/admin/login', [
+            'email' => 'admin@example.com',
             'password' => 'password123',
         ]);
-        $response = $this->actingAs($this->admin)->get('/admin/attendance/staff/' . $this->user->id);
+        $response = $this->actingAs($this->admin)->get('http://admin.localhost/admin/attendance/staff/' . $this->user->id);
         $response->assertStatus(200);
         $date = Carbon::now()->format('Y/m');
         $response->assertSee($date);
         $nextMonth = Carbon::now()->addMonth()->format('Y/m');
-        $response = $this->actingAs($this->admin)->get('/admin/attendance/staff/' . $this->user->id . '/' . $nextMonth);
+        $response = $this->actingAs($this->admin)->get('http://admin.localhost/admin/attendance/staff/' . $this->user->id . '/' . $nextMonth);
         $response->assertSee($nextMonth);
     }
     //「詳細」を押下すると、その日の勤怠詳細画面に遷移する
     public function testAttendanceTransition()
     {
-        $response = $this->post('admin/login', [
-            'email' => 'admin123@example.com',
+        $response = $this->post('http://admin.loclhost/admin/login', [
+            'email' => 'admin@example.com',
             'password' => 'password123',
         ]);
-        $response = $this->actingAs($this->admin)->get('/admin/attendance/list');
+        $response = $this->actingAs($this->admin)->get('http://admin.localhost/admin/attendance/list');
         $response->assertStatus(200);
-        $response = $this->actingAs($this->admin)->get('/admin/attendance/'.$this->attendance->id);
+        $response = $this->actingAs($this->admin)->get('http://admin.localhost/admin/attendance/'.$this->attendance->id);
         $response->assertSeeInOrder(['名前', '西　伶奈']);
         $response->assertSeeInOrder(['日付', '2025年5月1日']);
         $response->assertSeeInOrder(['出勤・退勤', '9:00', '18:00']);
